@@ -1,16 +1,51 @@
+# render.yaml
+# This file defines the services for deploying Metabase on Render.
+
 services:
+  # ----------------------------------------------------------------------
+  # A PostgreSQL database for Metabase's own application data.
+  # This is NOT your Supabase DB. This is for Metabase's internal use.
+  # ----------------------------------------------------------------------
+  - type: pserv # 'pserv' is the type for a PostgreSQL Database
+    name: metabase-app-db
+    databaseName: metabase_app_data # The name of the database inside Postgres
+    user: metabase_user          # The user for the database
+    plan: free # Use 'starter' for production. Free plans may sleep.
+    # The 'plan' determines performance, backups, etc.
+    # Starter: $7/mo, Standard: $20/mo
+    # See https://render.com/pricing#databases
+
+  # ----------------------------------------------------------------------
+  # The Metabase Web Service itself, running from the official Docker image.
+  # ----------------------------------------------------------------------
   - type: web
     name: metabase
-    env: docker
-    repo: https://github.com/render-examples/metabase.git # optional
-    plan: standard # ensure that metabase has at least 2GB of RAM (defaults to starter)
-    autoDeploy: false
+    env: docker # Specifies we are running a Docker container
+
+    # The official Metabase Docker image from Docker Hub
+    dockerImage: metabase/metabase:latest
+
+    # Set the startup command to ensure it runs on the correct port Render expects
+    dockerCommand: /app/run_metabase.sh
+
+    # Render's service plans. 'Starter' is recommended for real use.
+    # The Free plan will spin down after inactivity, causing long load times.
+    plan: starter # Options: free, starter, standard, etc.
+
+    # Health check to ensure Metabase is running correctly before routing traffic
+    healthCheck:
+      path: /api/health
+      initialDelaySeconds: 90 # Give Metabase time to start up
+
+    # Environment variables to configure Metabase to use our Postgres DB above.
+    # Render automatically injects the connection details from the 'metabase-app-db'
+    # service into a single environment variable.
     envVars:
+      - key: MB_DB_TYPE
+        value: postgres
       - key: MB_DB_CONNECTION_URI
         fromDatabase:
-          name: elephant
+          name: metabase-app-db # Must match the name of the database service
           property: connectionString
-databases:
-  - name: elephant
-    databaseName: metabasedb
-    ipAllowList: [] # only allow internal connections
+      - key: JAVA_TIMEZONE
+        value: UTC # Set to your preferred timezone, e.g., America/New_York
