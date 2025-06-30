@@ -30,7 +30,7 @@ services:
 
     # Render's service plans. 'Starter' is recommended for real use.
     # The Free plan will spin down after inactivity, causing long load times.
-    plan: starter # Options: free, starter, standard, etc.
+    plan: free # Options: free, starter, standard, etc.
 
     # Health check to ensure Metabase is running correctly before routing traffic
     healthCheck:
