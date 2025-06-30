@@ -1,42 +1,35 @@
 # render.yaml
-# CORRECTED: This version uses the proper schema for Render's Blueprint spec.
+# FINAL CORRECTED VERSION - Aligns with official Render.com schema
+
+# Databases are defined in their own top-level block.
+databases:
+  - name: metabase-app-db         # This name is referenced in the service below
+    plan: starter                   # Use 'starter' for production to prevent sleeping
+    databaseName: metabase_app_data # Optional: The name of the database inside Postgres
+    user: metabase_user          # Optional: The user for the database
 
 services:
-  # ----------------------------------------------------------------------
-  # A PostgreSQL database for Metabase's own application data.
-  # ----------------------------------------------------------------------
-  - type: pserv
-    name: metabase-app-db
-    databaseName: metabase_app_data
-    user: metabase_user
-    plan: free # Use 'starter' for production. Free plans may sleep.
-
-  # ----------------------------------------------------------------------
-  # The Metabase Web Service itself, running from the official Docker image.
-  # ----------------------------------------------------------------------
+  # The Metabase web service
   - type: web
     name: metabase
-    env: docker # Specifies we are running a Docker container
-    plan: free # Recommended to prevent sleeping. Options: free, starter, etc.
+    plan: starter # Use 'starter' for production. 'free' will be slow.
+    env: docker
 
-    # --- CORRECTED SECTION ---
-    # Docker-specific properties must be nested under a 'docker' block.
-    # The key is 'image', not 'dockerImage'.
-    docker:
-      image: metabase/metabase:latest
+    # CORRECT: The Docker image is specified under the 'image.url' key
+    image:
+      url: metabase/metabase:latest
 
-    # The health check is a top-level property for a web service and is correct.
-    healthCheck:
-      path: /api/health
-      initialDelaySeconds: 90 # Give Metabase time to start up
+    # CORRECT: The health check path is a top-level key, not a nested object
+    healthCheckPath: /api/health
+    initialDelaySeconds: 90
 
-    # Environment variables to configure Metabase to use our Postgres DB.
+    # Environment variables to configure Metabase
     envVars:
       - key: MB_DB_TYPE
         value: postgres
       - key: MB_DB_CONNECTION_URI
         fromDatabase:
-          name: metabase-app-db # Must match the name of the database service
+          name: metabase-app-db # This MUST match the name of the database above
           property: connectionString
       - key: JAVA_TIMEZONE
-        value: UTC # Set to your preferred timezone, e.g., America/New_York
+        value: UTC # Or your preferred timezone, e.g., America/New_York
