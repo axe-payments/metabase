@@ -17,7 +17,7 @@ services:
   - type: web
     name: metabase
     env: docker # Specifies we are running a Docker container
-    plan: ree # Recommended to prevent sleeping. Options: free, starter, etc.
+    plan: free # Recommended to prevent sleeping. Options: free, starter, etc.
 
     # --- CORRECTED SECTION ---
     # Docker-specific properties must be nested under a 'docker' block.
