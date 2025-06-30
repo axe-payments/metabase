@@ -11,4 +11,5 @@ services:
 databases:
   - name: elephant
     databaseName: metabasedb
+    plan: starter
     ipAllowList: [] # only allow internal connections
