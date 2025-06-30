@@ -1,19 +1,15 @@
 # render.yaml
-# This file defines the services for deploying Metabase on Render.
+# CORRECTED: This version uses the proper schema for Render's Blueprint spec.
 
 services:
   # ----------------------------------------------------------------------
   # A PostgreSQL database for Metabase's own application data.
-  # This is NOT your Supabase DB. This is for Metabase's internal use.
   # ----------------------------------------------------------------------
-  - type: pserv # 'pserv' is the type for a PostgreSQL Database
+  - type: pserv
     name: metabase-app-db
-    databaseName: metabase_app_data # The name of the database inside Postgres
-    user: metabase_user          # The user for the database
+    databaseName: metabase_app_data
+    user: metabase_user
     plan: free # Use 'starter' for production. Free plans may sleep.
-    # The 'plan' determines performance, backups, etc.
-    # Starter: $7/mo, Standard: $20/mo
-    # See https://render.com/pricing#databases
 
   # ----------------------------------------------------------------------
   # The Metabase Web Service itself, running from the official Docker image.
@@ -21,25 +17,20 @@ services:
   - type: web
     name: metabase
     env: docker # Specifies we are running a Docker container
+    plan: ree # Recommended to prevent sleeping. Options: free, starter, etc.
 
-    # The official Metabase Docker image from Docker Hub
-    dockerImage: metabase/metabase:latest
+    # --- CORRECTED SECTION ---
+    # Docker-specific properties must be nested under a 'docker' block.
+    # The key is 'image', not 'dockerImage'.
+    docker:
+      image: metabase/metabase:latest
 
-    # Set the startup command to ensure it runs on the correct port Render expects
-    dockerCommand: /app/run_metabase.sh
-
-    # Render's service plans. 'Starter' is recommended for real use.
-    # The Free plan will spin down after inactivity, causing long load times.
-    plan: free # Options: free, starter, standard, etc.
-
-    # Health check to ensure Metabase is running correctly before routing traffic
+    # The health check is a top-level property for a web service and is correct.
     healthCheck:
       path: /api/health
       initialDelaySeconds: 90 # Give Metabase time to start up
 
-    # Environment variables to configure Metabase to use our Postgres DB above.
-    # Render automatically injects the connection details from the 'metabase-app-db'
-    # service into a single environment variable.
+    # Environment variables to configure Metabase to use our Postgres DB.
     envVars:
       - key: MB_DB_TYPE
         value: postgres
