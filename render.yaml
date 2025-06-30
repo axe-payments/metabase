@@ -21,7 +21,6 @@ services:
 
     # CORRECT: The health check path is a top-level key, not a nested object
     healthCheckPath: /api/health
-    initialDelaySeconds: 90
 
     # Environment variables to configure Metabase
     envVars:
