@@ -1,34 +1,16 @@
-# render.yaml
-# FINAL CORRECTED VERSION - Aligns with official Render.com schema
-
-# Databases are defined in their own top-level block.
-databases:
-  - name: metabase-app-db         # This name is referenced in the service below
-    plan: starter                   # Use 'starter' for production to prevent sleeping
-    databaseName: metabase_app_data # Optional: The name of the database inside Postgres
-    user: metabase_user          # Optional: The user for the database
-
 services:
-  # The Metabase web service
   - type: web
     name: metabase
-    plan: starter # Use 'starter' for production. 'free' will be slow.
     env: docker
-
-    # CORRECT: The Docker image is specified under the 'image.url' key
-    image:
-      url: metabase/metabase:latest
-
-    # CORRECT: The health check path is a top-level key, not a nested object
-    healthCheckPath: /api/health
-
-    # Environment variables to configure Metabase
+    repo: https://github.com/render-examples/metabase.git # optional
+    plan: standard # ensure that metabase has at least 2GB of RAM (defaults to starter)
+    autoDeploy: false
     envVars:
-      - key: MB_DB_TYPE
-        value: postgres
       - key: MB_DB_CONNECTION_URI
         fromDatabase:
-          name: metabase-app-db # This MUST match the name of the database above
+          name: elephant
           property: connectionString
-      - key: JAVA_TIMEZONE
-        value: UTC # Or your preferred timezone, e.g., America/New_York
+databases:
+  - name: elephant
+    databaseName: metabasedb
+    ipAllowList: [] # only allow internal connections
